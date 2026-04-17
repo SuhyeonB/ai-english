@@ -5,16 +5,16 @@ import com.example.ai_english.domain.conversation.dto.ChatMessage;
 import com.example.ai_english.domain.conversation.dto.response.OpenAiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OpenAiService {
@@ -62,10 +62,12 @@ public class OpenAiService {
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToFlux(String.class)
-                .filter(chunk -> chunk.startsWith("data: "))
-                .map(chunk -> chunk.substring(6))
+                .doOnNext(chunk -> log.info("chunk: {}", chunk))
+                .doOnNext(chunk -> log.info("parsed chunk: {}", chunk))
                 .filter(chunk -> !chunk.equals("[DONE]"))
-                .mapNotNull(this::extractStreamContext);
+                .mapNotNull(this::extractStreamContext)
+                .doOnNext(chunk -> log.info("parsed chunk: {}", chunk));
+
     }
 
     public List<ChatMessage> buildMessages(String systemPrompt, List<ChatMessage> history, String userMessage) {
