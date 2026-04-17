@@ -22,6 +22,8 @@ public enum ErrorCode {
     SESSION_NOT_FOUND("CONV_001", "세션을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
     SESSION_ALREADY_ENDED("CONV_002", "이미 종료된 세션입니다.", HttpStatus.BAD_REQUEST),
 
+    JSON_PROCESSING_ERROR("JSON_001", "JSON 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
+
     // feedback
     FEEDBACK_NOT_FOUND("FEED_001", "피드백을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
