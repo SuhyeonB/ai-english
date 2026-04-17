@@ -67,10 +67,13 @@ public class ConversationService {
         StringBuilder fullResponse = new StringBuilder();
 
         // 답변을 클라이언트에 전달 (stream(Flux))
+        // conversation_messages 테이블에 서버 메세지(assistant) 저장
         return openAiService.stream(history, dto.getContent())
                 .doOnNext(fullResponse::append)
-                .doOnComplete(() -> saveAssistantMessage(sessionId, fullResponse.toString()));
-        // conversation_messages 테이블에 서버 메세지(assistant) 저장
+                .doOnComplete(() ->  {
+                    saveAssistantMessage(sessionId, fullResponse.toString());
+                    conversationRedisService.addMessage(sessionId, ChatMessage.ofAssistant(fullResponse.toString()));
+                });
     }
 
     @Transactional
