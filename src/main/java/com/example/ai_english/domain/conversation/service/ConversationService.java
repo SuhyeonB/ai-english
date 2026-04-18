@@ -17,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
 
@@ -69,10 +72,19 @@ public class ConversationService {
         // 답변을 클라이언트에 전달 (stream(Flux))
         // conversation_messages 테이블에 서버 메세지(assistant) 저장
         return openAiService.stream(history, dto.getContent())
-                .doOnNext(fullResponse::append)
-                .doOnComplete(() ->  {
-                    saveAssistantMessage(sessionId, fullResponse.toString());
-                    conversationRedisService.addMessage(sessionId, ChatMessage.ofAssistant(fullResponse.toString()));
+                .subscribeOn(Schedulers.boundedElastic()) // 전체를 blocking-safe 스레드로
+                .doOnNext(fullResponse::append)            // 응답 누적
+                .concatWith(Mono.fromRunnable(() -> {     // 트림 종료 후 실행
+                    String finalResponse = fullResponse.toString();
+
+                    saveAssistantMessage(sessionId, finalResponse);
+                    conversationRedisService.addMessage(
+                            sessionId,
+                            ChatMessage.ofAssistant(finalResponse)
+                    );
+                }))
+                .onErrorResume(e -> {
+                    return Flux.just("⚠️ error: " + e.getMessage());
                 });
     }
 
