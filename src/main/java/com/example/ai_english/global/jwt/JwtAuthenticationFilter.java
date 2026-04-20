@@ -51,8 +51,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 oAuth2User, null, oAuth2User.getAuthorities()
         );
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            filterChain.doFilter(request, response);
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+    }
 
-        filterChain.doFilter(request, response);
+    @Override
+    protected boolean shouldNotFilterAsyncDispatch() {
+        return true;
+    }
+
+    @Override
+    protected boolean shouldNotFilterErrorDispatch() {
+        return true;
     }
 }
