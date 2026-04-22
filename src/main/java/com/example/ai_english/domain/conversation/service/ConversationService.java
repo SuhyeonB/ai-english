@@ -9,6 +9,7 @@ import com.example.ai_english.domain.conversation.entity.MessageRole;
 import com.example.ai_english.domain.conversation.entity.Status;
 import com.example.ai_english.domain.conversation.repository.ConversationMessageRepository;
 import com.example.ai_english.domain.conversation.repository.ConversationSessionRepository;
+import com.example.ai_english.domain.feedback.service.FeedbackService;
 import com.example.ai_english.domain.user.entity.User;
 import com.example.ai_english.domain.user.service.UserService;
 import com.example.ai_english.global.exception.BusinessException;
@@ -32,6 +33,7 @@ public class ConversationService {
     private final ConversationRedisService conversationRedisService;
     private final OpenAiService openAiService;
     private final UserService userService;
+    private final FeedbackService feedbackService;
 
     @Transactional
     public CreateSessionResponse createSession(Long userId) {
@@ -46,8 +48,7 @@ public class ConversationService {
     }
 
     public Flux<String> sendMessage(Long userId, Long sessionId, SendMessageRequest dto) {
-        ConversationSession session = conversationSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+        ConversationSession session = findSession(sessionId);
 
         if (session.getStatus().equals(Status.COMPLETED)) {
             throw new BusinessException(ErrorCode.SESSION_ALREADY_ENDED);
@@ -84,14 +85,13 @@ public class ConversationService {
                     );
                 }))
                 .onErrorResume(e -> {
-                    return Flux.just("⚠️ error: " + e.getMessage());
+                    return Flux.just("error: " + e.getMessage());
                 });
     }
 
     @Transactional
     public void endSession(Long userId, Long sessionId) {
-        ConversationSession session = conversationSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+        ConversationSession session = findSession(sessionId);
 
         if (session.getStatus().equals(Status.COMPLETED)) {
             throw new BusinessException(ErrorCode.SESSION_ALREADY_ENDED);
@@ -104,8 +104,7 @@ public class ConversationService {
         session.end();
 
         // 2. 피드백 분석은 비동기로 시작
-
-        // 3. feedbackId 즉시 반환
+        feedbackService.createFeedbackAsync(userId, sessionId);
 
         // redis 정리
         conversationRedisService.deleteSession(sessionId);
@@ -113,8 +112,7 @@ public class ConversationService {
 
     @Transactional
     public void saveUserMessage(Long sessionId, String userMessage) {
-        ConversationSession session = conversationSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+        ConversationSession session = findSession(sessionId);
         ConversationMessage message = ConversationMessage.builder()
                 .session(session)
                 .role(MessageRole.USER)
@@ -127,8 +125,7 @@ public class ConversationService {
 
     @Transactional
     public void saveAssistantMessage(Long sessionId, String fullResponse) {
-        ConversationSession session = conversationSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+        ConversationSession session = findSession(sessionId);
         ConversationMessage message = ConversationMessage.builder()
                 .session(session)
                 .role(MessageRole.ASSISTANT)
@@ -137,5 +134,10 @@ public class ConversationService {
                 .build();
         conversationMessageRepository.save(message);
         session.increaseCount();
+    }
+
+    public ConversationSession findSession(Long sessionId) {
+        return conversationSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
     }
 }

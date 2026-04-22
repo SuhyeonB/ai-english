@@ -1,6 +1,6 @@
 package com.example.ai_english.domain.conversation.service;
 
-import com.example.ai_english.domain.conversation.constant.PromptConstants;
+import com.example.ai_english.global.constant.PromptConstants;
 import com.example.ai_english.domain.conversation.dto.ChatMessage;
 import com.example.ai_english.domain.conversation.dto.response.OpenAiResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,15 +25,18 @@ public class OpenAiService {
     @Value("${openai.model}")
     private String model;
 
-    @Value("${openai.max-tokens}")
-    private int maxTokens;
+    @Value("${openai.stream-max-tokens}")
+    private int streamMaxTokens;
+
+    @Value("${openai.chat-max-tokens}")
+    private int chatMaxTokens;
 
     public String chat(List<ChatMessage> history) {
         List<ChatMessage> messages = buildMessages(PromptConstants.FEEDBACK_PROMPT, history, "");
 
         Map<String, Object> requestBody = Map.of(
                 "model", model,
-                "max_tokens", maxTokens,
+                "max_tokens", chatMaxTokens,
                 "messages", messages
         );
 
@@ -52,7 +55,7 @@ public class OpenAiService {
 
         Map<String, Object> requestBody = Map.of(
                 "model", model,
-                "max_tokens", maxTokens,
+                "max_tokens", streamMaxTokens,
                 "stream", true,
                 "messages", messages
         );
