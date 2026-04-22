@@ -23,4 +23,5 @@ jwt:
 openai:
   api-key: ${OPENAI_API_KEY}
   model: gpt-4o
-  max-tokens: 1000
+  stream-max-tokens: 1000
+  chat-max-tokens: 4000
