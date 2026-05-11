@@ -4,11 +4,9 @@ import com.example.ai_english.domain.conversation.dto.ChatMessage;
 import com.example.ai_english.domain.conversation.entity.ConversationSession;
 import com.example.ai_english.domain.conversation.repository.ConversationSessionRepository;
 import com.example.ai_english.domain.conversation.service.ConversationRedisService;
-import com.example.ai_english.domain.conversation.service.ConversationService;
 import com.example.ai_english.domain.conversation.service.OpenAiService;
 import com.example.ai_english.domain.feedback.dto.FeedbackAnalysisResult;
 import com.example.ai_english.domain.feedback.dto.response.FeedbackResponse;
-import com.example.ai_english.domain.feedback.entity.Category;
 import com.example.ai_english.domain.feedback.entity.FeedbackError;
 import com.example.ai_english.domain.feedback.entity.FeedbackReport;
 import com.example.ai_english.domain.feedback.entity.FeedbackVocabulary;
@@ -16,7 +14,10 @@ import com.example.ai_english.domain.feedback.repository.FeedbackErrorRepository
 import com.example.ai_english.domain.feedback.repository.FeedbackReportRepository;
 import com.example.ai_english.domain.feedback.repository.FeedbackVocabularyRepository;
 import com.example.ai_english.domain.user.entity.User;
+import com.example.ai_english.domain.user.entity.UserWeaknessStat;
+import com.example.ai_english.domain.user.repository.UserWeaknessStatRepository;
 import com.example.ai_english.domain.user.service.UserService;
+import com.example.ai_english.global.entity.Category;
 import com.example.ai_english.global.exception.BusinessException;
 import com.example.ai_english.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -36,7 +38,9 @@ public class FeedbackService {
     private final FeedbackErrorRepository feedbackErrorRepository;
     private final FeedbackVocabularyRepository feedbackVocabularyRepository;
     private final ConversationSessionRepository conversationSessionRepository;
+    private final UserWeaknessStatRepository userWeaknessStatRepository;
 
+    private final UserService userService;
     private final ConversationRedisService conversationRedisService;
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
@@ -46,6 +50,8 @@ public class FeedbackService {
     public void createFeedbackAsync(Long userId, Long sessionId) {
         ConversationSession session = conversationSessionRepository.findById(sessionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SESSION_NOT_FOUND));
+
+        User user = userService.findUser(userId);
 
         if (!session.getUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN_SESSION_ACCESS);
@@ -85,6 +91,25 @@ public class FeedbackService {
                     .advice(errorDto.getAdvice())
                     .build();
             feedbackErrorRepository.save(error);
+
+            // weakness update
+            Category category = Category.valueOf(errorDto.getCategory());
+            String tag = errorDto.getTag();
+
+            userWeaknessStatRepository.findByUserAndCategoryAndTag(user, category, tag)
+                    .ifPresentOrElse(
+                            UserWeaknessStat::increment,
+                            () -> {
+                                UserWeaknessStat stat = UserWeaknessStat.builder()
+                                        .user(user)
+                                        .category(category)
+                                        .tag(tag)
+                                        .count(1)
+                                        .lastSeenAt(LocalDateTime.now())
+                                        .build();
+                                userWeaknessStatRepository.save(stat);
+                            }
+                    );
         }
 
         for (FeedbackAnalysisResult.VocabularyDto vocaDto : result.getVocabularies()) {

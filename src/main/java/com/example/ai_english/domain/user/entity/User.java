@@ -48,4 +48,19 @@ public class User extends Timestamped {
     }
 
     public void updateNickname(String nickname) { this.nickname = nickname; }
+    public void updateEmail(String email) { this.email = email; }
+
+    public void attend() {
+        LocalDate today = LocalDate.now();
+
+        if (lastStudiedAt == null || lastStudiedAt.isBefore(today.minusDays(1))) {
+            lastStudiedAt = today;
+            streakDays = 1;
+        } else if (lastStudiedAt.equals(today.minusDays(1))) {
+            lastStudiedAt = today;
+            streakDays++;
+        } else if (lastStudiedAt.equals(today)) {
+            return;
+        }
+    }
 }

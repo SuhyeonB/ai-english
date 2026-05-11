@@ -39,6 +39,7 @@ public class FeedbackAnalysisResult {
     public static class ErrorDto {
 
         private String category;
+        private String tag;
         private String original;
         private String suggestion;
         private String explanation;

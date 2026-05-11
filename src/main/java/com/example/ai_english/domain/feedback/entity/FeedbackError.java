@@ -1,5 +1,6 @@
 package com.example.ai_english.domain.feedback.entity;
 
+import com.example.ai_english.global.entity.Category;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -24,6 +25,8 @@ public class FeedbackError {
     @Column(nullable = false)
     private Category category;
 
+    private String tag;
+
     @Column(columnDefinition = "TEXT")
     private String original;
 
@@ -40,10 +43,11 @@ public class FeedbackError {
     private String advice;
 
     @Builder
-    public FeedbackError(FeedbackReport feedbackReport, Category category, String original, String suggestion,
+    public FeedbackError(FeedbackReport feedbackReport, Category category, String tag, String original, String suggestion,
                          String explanation, String example, String advice) {
         this.feedbackReport = feedbackReport;
         this.category = category;
+        this.tag = tag;
         this.original = original;
         this.suggestion = suggestion;
         this.explanation = explanation;

@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
@@ -43,6 +42,9 @@ public class ConversationService {
         conversationSessionRepository.save(session);
 
         conversationRedisService.initSession(session.getId());
+
+        // 출석
+        user.attend();
 
         return CreateSessionResponse.from(session);
     }

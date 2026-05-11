@@ -43,6 +43,9 @@ public final class PromptConstants {
         - PRONUNCIATION
         - FLUENCY
         
+        Tag (String):
+        - examples: TENSE, SUBJECT_VERB_AGREEMENT, WORD_CHOICE
+        
         Scoring:
         - Integer (0–100)
         - Include all five scores
@@ -64,6 +67,7 @@ public final class PromptConstants {
           "errors": [
             {
               "category": "GRAMMAR",
+              "tag": "...",
               "original": "...",
               "suggestion": "...",
               "explanation": "...",
