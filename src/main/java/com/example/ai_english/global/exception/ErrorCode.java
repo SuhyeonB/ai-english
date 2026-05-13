@@ -26,7 +26,10 @@ public enum ErrorCode {
     JSON_PROCESSING_ERROR("JSON_001", "JSON 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
 
     // feedback
-    FEEDBACK_NOT_FOUND("FEED_001", "피드백을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
+    FEEDBACK_NOT_FOUND("FEED_001", "피드백을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+
+    // badge
+    BADGE_NOT_FOUND("BADGE_001", "뱃지를 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
     private final String code;
     private final String message;

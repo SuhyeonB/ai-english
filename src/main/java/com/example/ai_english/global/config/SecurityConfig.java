@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ASYNC, DispatcherType.ERROR).permitAll()
                         .requestMatchers("/oauth2/**", "/api/v1/auth/**", "/error").permitAll()
+                        .requestMatchers("/api/v1/admin/**", "api/v1/users/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
