@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,6 +35,9 @@ public class ConversationSession {
 
     @Column(nullable = false)
     private Integer messageCount = 0;
+
+    @OneToMany(mappedBy = "session", fetch = FetchType.LAZY)
+    private List<ConversationMessage> messages = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

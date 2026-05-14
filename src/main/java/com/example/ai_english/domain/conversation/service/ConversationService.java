@@ -3,6 +3,8 @@ package com.example.ai_english.domain.conversation.service;
 import com.example.ai_english.domain.conversation.dto.ChatMessage;
 import com.example.ai_english.domain.conversation.dto.request.SendMessageRequest;
 import com.example.ai_english.domain.conversation.dto.response.CreateSessionResponse;
+import com.example.ai_english.domain.conversation.dto.response.SessionDetailResponse;
+import com.example.ai_english.domain.conversation.dto.response.SessionResponse;
 import com.example.ai_english.domain.conversation.entity.ConversationMessage;
 import com.example.ai_english.domain.conversation.entity.ConversationSession;
 import com.example.ai_english.domain.conversation.entity.MessageRole;
@@ -19,7 +21,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.List;
@@ -43,6 +44,9 @@ public class ConversationService {
         conversationSessionRepository.save(session);
 
         conversationRedisService.initSession(session.getId());
+
+        // 출석
+        user.attend();
 
         return CreateSessionResponse.from(session);
     }
@@ -134,6 +138,28 @@ public class ConversationService {
                 .build();
         conversationMessageRepository.save(message);
         session.increaseCount();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SessionResponse> getSessionList (Long userId) {
+        User user = userService.findUser(userId);
+
+        List<ConversationSession> sessions = conversationSessionRepository.findByUserOrderByStartedAtDesc(user);
+
+        return sessions.stream().map(SessionResponse::from).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public SessionDetailResponse getDetailSession (Long userId, Long sessionId) {
+        userService.findUser(userId);
+        ConversationSession session = findSession(sessionId);
+
+        if (!session.getUser().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN_SESSION_ACCESS);
+        }
+        List<ConversationMessage> messages = conversationMessageRepository.findBySession(session);
+
+        return new SessionDetailResponse(sessionId, messages.stream().map(SessionDetailResponse.SessionMessage::from).toList());
     }
 
     public ConversationSession findSession(Long sessionId) {
