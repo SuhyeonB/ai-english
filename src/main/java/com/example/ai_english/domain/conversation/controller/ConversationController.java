@@ -3,6 +3,8 @@ package com.example.ai_english.domain.conversation.controller;
 import com.example.ai_english.domain.auth.dto.CustomOAuth2User;
 import com.example.ai_english.domain.conversation.dto.request.SendMessageRequest;
 import com.example.ai_english.domain.conversation.dto.response.CreateSessionResponse;
+import com.example.ai_english.domain.conversation.dto.response.SessionDetailResponse;
+import com.example.ai_english.domain.conversation.dto.response.SessionResponse;
 import com.example.ai_english.domain.conversation.service.ConversationService;
 import com.example.ai_english.global.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -44,5 +48,22 @@ public class ConversationController {
             ) {
         conversationService.endSession(principal.getUserId(), sessionId);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).body(ApiResponse.success());
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<SessionResponse>>> getSessionList(
+            @AuthenticationPrincipal CustomOAuth2User principal
+    ) {
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(conversationService.getSessionList(principal.getUserId())));
+    }
+
+    @GetMapping("/{sessionId}")
+    public ResponseEntity<ApiResponse<SessionDetailResponse>> getDetailSession(
+            @AuthenticationPrincipal CustomOAuth2User principal,
+            @PathVariable Long sessionId
+    ) {
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(conversationService.getDetailSession(principal.getUserId(), sessionId)));
     }
 }

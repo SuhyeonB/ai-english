@@ -17,5 +17,7 @@ public interface ConversationSessionRepository extends JpaRepository<Conversatio
             "WHERE s.user = :user AND s.status = 'COMPLETED'")
     Object[] findStatsByUser (@Param("user") User user);
 
+    List<ConversationSession> findByUserOrderByStartedAtDesc(User user);
+
     List<ConversationSession> findTop10ByUserOrderByStartedAtDesc(User user);
 }
