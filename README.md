@@ -201,3 +201,9 @@ DB_URL=jdbc:mysql://localhost:3306/ai_english
 # 실행
 ./gradlew bootRun
 ```
+---
+## 트러블 슈팅
+### 🔒JwtAuthentication에서 UserRepository를 호출하는 이유
+https://coral-bonsai-6fd.notion.site/JwtAuthentication-UserRepository-341fe68bada980b1b16fed2e26fce6d1?source=copy_link
+### 💬Spring Boot + Spring Security + SSE 스트리밍을 구현하면서 겪은 세 가지 문제
+https://coral-bonsai-6fd.notion.site/Spring-Boot-Spring-Security-SSE-346fe68bada980f697d3ebfb5350b064?source=copy_link
