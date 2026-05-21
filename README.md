@@ -77,7 +77,8 @@ Client
 
 ## ERD
 
-> 전체 테이블 구성은 아래와 같습니다.
+<img width="2000" height="776" alt="image" src="https://github.com/user-attachments/assets/fa727e69-276c-4552-ba7d-7242f1c71ad9" />
+
 
 | 테이블 | 설명 |
 |---|---|
