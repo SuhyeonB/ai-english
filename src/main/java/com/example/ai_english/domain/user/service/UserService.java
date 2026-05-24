@@ -63,9 +63,10 @@ public class UserService {
     public HomeStatsResponse getUserStats(Long userId) {
         User user = findUser(userId);
 
-        Object[] stats = conversationSessionRepository.findStatsByUser(user);
-        Long totalSessions = (Long) stats[0];
-        Long totalMinutes = (Long) stats[1] / 60;
+        Object[] raw = (Object[]) conversationSessionRepository.findStatsByUser(user)[0];
+        Long totalSessions = (Long) raw[0];
+        long totalSeconds = raw[1] != null ? (Long) raw[1] : 0L;
+        Long totalMinutes = totalSeconds / 60;
 
         Double avgScore = feedbackReportRepository.findAvgScoreByUser(user);
 
